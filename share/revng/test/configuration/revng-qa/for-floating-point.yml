@@ -1,0 +1,40 @@
+#
+# This file is distributed under the MIT License. See LICENSE.md for details.
+#
+
+tags:
+  - name: for-floating-point
+
+  # We force VFPv3 with hardfloat calling convention on armv7a, in order to
+  # avoid the toolchain emitting calls to the libgcc helpers for double
+  # precision FP.
+  - name: arm-double-vfp
+    variables:
+      GCC_CFLAGS:
+        - -mfpu=vfpv3
+        - -mfloat-abi=hard
+
+sources:
+  - tags: [simple-executable, static, nostdlib, nostartfiles, for-floating-point]
+    repeat-for:
+      - [arm, arm-double-vfp]
+      # MIPS-I is the default ISA for the `mips`/`mipsel` toolchains. The
+      # toolchain implements `(int)<double>` via `cvt.w.{d,s}`, whose rounding
+      # mode comes from the FCSR control register, so the compiler brackets the
+      # conversion with `cfc1`/`ori`/`xori`/`ctc1` to force round-toward-zero
+      # and then restore. revng lifts that sequence correctly, but the FCSR
+      # write goes through the opaque `helper_ctc1`, so the static rounding
+      # mode is lost and the `enforce-abi` artifact emits the generic
+      # `@float64_to_int32(...)` softfloat call instead of the rounding-
+      # specific `@float64_to_int32_round_to_zero(...)` variant other targets
+      # produce. The `(_round_to_zero)?` group in the corresponding `.filecheck`
+      # makes this difference acceptable, so no extra build flag is required.
+      - [mips]
+      - [mipsel]
+      - [x86-64]
+      - [s390x]
+      - [i386]
+      - [aarch64]
+    prefix: share/revng/test/tests/floating-point
+    members:
+      - floating-point.c
