@@ -69,6 +69,7 @@ sources:
     prefix: share/revng/test/tests/analysis/CollectCFG/x86_64
     members:
       - switch-jump-table.S
+      - switch-jump-table-and-mask.S
   - tags: [simple-executable, x86-64, static, nostdlib, moderate-opt, for-analysis, for-collect-cfg]
     prefix: share/revng/test/tests/analysis/CollectCFG/x86_64
     members:
