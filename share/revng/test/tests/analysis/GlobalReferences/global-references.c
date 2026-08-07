@@ -11,7 +11,13 @@
 uint64_t first_global = 0x1122334455667788;
 uint64_t second_global = 0x99aabbccddeeff00;
 
+// A string, so that a global variable holding one is listed with what it says.
+// It is read from the middle as well as from the start, which is how suffix
+// sharing looks: both are references to this one string.
+const char greeting[] = "hello glorious world";
+
 uint64_t consume(uint64_t first, uint64_t second);
+uint64_t consume_string(const char *string);
 
 // Reads both globals.
 uint64_t reads_globals(void) {
@@ -26,6 +32,11 @@ uint64_t writes_globals(uint64_t value) {
   return 0;
 }
 
+// Reads the string, from its start and from the middle of it.
+uint64_t reads_string(void) {
+  return consume_string(greeting) + consume_string(greeting + 14);
+}
+
 // Touches no global at all, as the counter-example: nothing must be annotated
 // or recorded for it.
 uint64_t touches_nothing(uint64_t first, uint64_t second) {
@@ -36,7 +47,11 @@ uint64_t consume(uint64_t first, uint64_t second) {
   return first ^ second;
 }
 
+uint64_t consume_string(const char *string) {
+  return (uint64_t) string[0];
+}
+
 int main(int argc, char **argv) {
-  return (int) (reads_globals() + writes_globals(argc)
+  return (int) (reads_globals() + writes_globals(argc) + reads_string()
                 + touches_nothing(argc, argc + 1));
 }
